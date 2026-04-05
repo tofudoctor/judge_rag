@@ -1,0 +1,8 @@
+langchain==1.2.7
+langchain-ollama==1.0.1
+langchain-qdrant==1.1.0
+langchain-core==1.2.7
+langchain-text-splitters==1.1.0
+qdrant-client==1.17.1
+ollama==0.6.1
+tqdm==4.67.3
