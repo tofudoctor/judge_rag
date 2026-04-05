@@ -8,10 +8,26 @@ def get_client(host="localhost", port=6333):
 
 def ensure_collection(client, name, dim, distance):
     if not client.collection_exists(name):
-        client.create_collection(
-            collection_name=name,
-            vectors_config=VectorParams(size=dim, distance=Distance.COSINE),
-        )
+        if distance == "cosine":
+            client.create_collection(
+                collection_name=name,
+                vectors_config=VectorParams(size=dim, distance=Distance.COSINE),
+            )
+        elif distance == "dot":
+            client.create_collection(
+                collection_name=name,
+                vectors_config=VectorParams(size=dim, distance=Distance.DOT),
+            )
+        elif distance == "euclid":
+            client.create_collection(
+                collection_name=name,
+                vectors_config=VectorParams(size=dim, distance=Distance.EUCLID),
+            )
+        else:
+            client.create_collection(
+                collection_name=name,
+                vectors_config=VectorParams(size=dim, distance=Distance.MANHATTAN),
+            )
 
 def get_store(client, collection, embedding):
     return QdrantVectorStore(
