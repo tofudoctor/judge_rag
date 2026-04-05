@@ -87,7 +87,7 @@ http://localhost:6333
 
 * 預設使用 embedding model：bge-m3（透過 Ollama）
 * 預設 Qdrant：localhost:6333
-* 支援自訂年份數（n_years）
+* 支援自訂年份數(n_years)
 
 ---
 
