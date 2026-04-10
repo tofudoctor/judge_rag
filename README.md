@@ -18,7 +18,7 @@
 ### 使用 venv（建議）
 
 ```bash
-python -m venv venv
+python3 -m venv venv
 ```
 
 啟動環境：
@@ -80,6 +80,14 @@ docker start qdrant
 
 啟動後可在瀏覽器確認：
 http://localhost:6333
+
+---
+
+# 執行
+在 judge_rag 外面：
+```bash
+python3 -m judge_rag.main
+```
 
 ---
 

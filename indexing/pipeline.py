@@ -1,4 +1,5 @@
 # indexing/pipeline.py
+import hashlib
 from tqdm import tqdm
 from langchain_ollama import OllamaEmbeddings
 from .loader import data_loader_by_years
@@ -49,14 +50,36 @@ class BuildPipeline:
             )
 
             # 批次寫入 + tqdm
+            print(f"[Writer] Adding to {collection_name}")
             batch_size = 32
             total_batches = (len(chunked_docs) + batch_size - 1) // batch_size
             for batch in tqdm(batch_iter(chunked_docs, batch_size),
                             total=total_batches,
                             desc=f"[Writer] Adding to {collection_name}",
                             unit="batch",
-                            dynamic_ncols=True):
-                store.add_documents(batch)
+                            dynamic_ncols=True,
+                            bar_format="{percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}]"):
+                # 過濾空 chunk
+                batch = [d for d in batch if d.page_content.strip()]
+                if not batch:
+                    continue
+
+                # 生成 id
+                for chunk in batch:
+                    chunk.metadata["id"] = hashlib.sha1(chunk.page_content.encode("utf-8")).hexdigest()
+
+                # 嘗試加入 batch
+                try:
+                    store.add_documents(batch)
+                except Exception as e_batch:
+                    # 如果整個 batch 失敗，逐個加入
+                    for chunk in batch:
+                        try:
+                            store.add_documents([chunk])
+                        except Exception as e_chunk:
+                            print(f"[WARN] Skipping bad chunk: {e_chunk}")
+                            print(f"Chunk preview: {chunk.page_content[:100]}")
+                            continue
 
             print(f"[Writer] Written to Qdrant collection: {collection_name}")
 
