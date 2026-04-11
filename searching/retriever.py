@@ -1,17 +1,17 @@
 # searching/retriever.py
 from langchain_qdrant import QdrantVectorStore
-from qdrant_client import QdrantClient
+from qdrant_client import QdrantClient, models
 from langchain_ollama import OllamaEmbeddings
 
 class MultiRetriever:
-    def __init__(self, case_type):
+    def __init__(self, distance="cosine"):
         self.embedder = OllamaEmbeddings(model="bge-m3")
         self.client = QdrantClient(url="http://localhost:6333")
 
         self.collections = [
-            f"{case_type}_chunk1000",
-            f"{case_type}_chunk500",
-            f"{case_type}_chunk300",
+            f"{distance}_chunk1000",
+            f"{distance}_chunk500",
+            f"{distance}_chunk300",
         ]
 
         self.stores = [
@@ -23,7 +23,7 @@ class MultiRetriever:
             for col in self.collections
         ]
 
-    def retrieve(self, query, target_count=30):
+    def retrieve(self, query, target_count=50, case_type="civil"):
         all_results = []
         
         # 為了去重後仍有足夠數量，每個庫抓取 target_count 的兩倍
@@ -31,7 +31,20 @@ class MultiRetriever:
         
         for store in self.stores:
             # 使用 score 版本
-            results = store.similarity_search_with_score(query, k=search_k)
+            results = store.similarity_search_with_score(
+                query, 
+                k=search_k,
+                    filter=models.Filter(
+                        must=[
+                            models.FieldCondition(
+                                key="metadata.TYPE",
+                                match=models.MatchValue(
+                                    value=case_type
+                                ),
+                            ),
+                        ]
+                    )
+            )
             all_results.extend(results)
 
         # 根據 Score（相似度分數）進行降冪排序 (從高到低)

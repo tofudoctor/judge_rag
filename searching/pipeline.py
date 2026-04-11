@@ -1,7 +1,7 @@
 # searching/pipeline.py
 from .graph import quick_search_graph
 
-class SearchPipeline:
+class QuickSearchPipeline:
     def __init__(self, case_type):
         self.app = quick_search_graph(case_type)
 

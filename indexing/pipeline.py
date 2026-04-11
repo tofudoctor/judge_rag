@@ -13,7 +13,7 @@ class BuildPipeline:
         self.client = get_client(host="localhost", port=6333)
         self.vector_dim = len(self.embedder.embed_query("test"))
 
-    def run(self, base_dir, case_type=None, n_years=None):
+    def run(self, base_dir, case_type=None, n_years=None, distance="cosine"):
         """
         pipeline 入口
         """
@@ -35,12 +35,12 @@ class BuildPipeline:
             print(f"[Chunker] {len(chunked_docs)} chunks created")
 
             # Qdrant + embed
-            collection_name = f"{case_type}_chunk{chunk_size}"
+            collection_name = f"{distance}_chunk{chunk_size}"
             ensure_collection(
                 client=self.client,
                 name=collection_name,
                 dim=self.vector_dim,
-                distance="cosine"
+                distance=distance
             )
 
             store = get_store(

@@ -86,6 +86,7 @@ http://localhost:6333
 # 執行
 在 judge_rag 外面：
 ```bash
+python3 -m judge_rag.preprocess
 python3 -m judge_rag.main
 ```
 
