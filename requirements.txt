@@ -6,4 +6,6 @@ langchain-text-splitters==1.1.0
 qdrant-client==1.17.1
 ollama==0.6.1
 FlashRank==0.2.10
+fastembed==0.8.0
+sentence-transformers==5.4.0
 tqdm==4.67.3

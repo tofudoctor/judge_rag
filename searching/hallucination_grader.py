@@ -14,14 +14,21 @@ class HallucinationGrader:
         # 設為 json 模式確保輸出穩定
         self.llm = ChatOllama(model=model, format="json", temperature=0)
         
-        system = """你是一個嚴格的法律事實查核員。
+        system = """你是一個「寬鬆但可靠」的法律事實查核員。
         你會收到【參考判決】以及【AI 產出的答案】。
+        你的任務是確保【AI 產出的答案】沒有「嚴重的法律事實錯誤」，確保核心結論一致就可以。
         
-        你的唯一任務：判斷【AI 產出的答案】中提到的所有事實、法條、結論，是否都能從【參考判決】中找到對應的根據。
-        
-        評分標準：
-        - 'yes': 答案中所有內容均有判決書支撐，無幻覺。
-        - 'no': 答案中包含了判決書沒提到的資訊（例如：編造了判決字號、引用了錯誤的法條、或是引用了中國法律）。
+        查核標準：
+        1. 【核心結論】：答案對法律問題的結論（如：有效或無效）是否與判決書一致？
+        2. 【禁止編造】：答案是否提到了判決書中「完全不存在」的判決字號或當事人？
+        3. 【容忍度】：
+        - 只要結論正確且引用了正確的判決字號，即使 AI 的語氣與原文略有不同，也應評為 'yes'。
+        - 除非答案公然違背判決書內容，或引用了判決書中完全沒出現的法條，才評為 'no'。
+        - 忽略以下情況（仍應評為 yes）：
+            - 語句改寫、摘要
+            - 多篇判決整理後的統整說法
+            - 未涵蓋所有細節
+            - 合理推論
         
         請僅以 JSON 格式輸出，包含 'binary_score'。"""
         
@@ -34,4 +41,15 @@ class HallucinationGrader:
         doc_text = "\n\n".join([d.page_content for d in docs])
         chain = self.prompt | self.llm
         res = chain.invoke({"documents": doc_text, "answer": answer})
-        return res.content
+        return self.sanitize_score(res.content)
+    
+    def sanitize_score(self, score):
+        """將多種可能的肯定回覆統一轉為 'yes'，其餘皆為 'no'"""
+        positive_values = ["yes", "y", "YES", "Yes",
+                            "1", 1, 
+                            True, "True", "true", "T", "t"]
+        
+        # 先轉字串並去空白，確保比對精準
+        if str(score).strip() in [str(v) for v in positive_values]:
+            return "yes"
+        return "no"

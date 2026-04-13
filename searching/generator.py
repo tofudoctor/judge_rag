@@ -13,6 +13,7 @@ class LegalGenerator:
         # 修正：將變數放入 prompt 範本中
         self.system_message = """
         你是一位極度嚴謹、具備台灣法學專業的法官助理。依據【使用者的問題】，從提供的【參考判決文獻】中歸納出準確的法律見解摘要。
+        請先在心中整理各判決的共通法律見解，再輸出最重要的結論。
 
         【判決書 ID 對照表】（引用時必須使用以下 ID，不得自行更改）：
         {id_reference}
@@ -42,29 +43,27 @@ class LegalGenerator:
         if not docs:
             return "找不到相關的判決書資料，無法提供回答。"
 
-        # 1. 產生 id_reference 字串
-        # 格式：- ID 1: [JID_A] \n - ID 2: [JID_B]
-        id_list = []
+        jid_list = []
         context_list = []
         
-        for i, d in enumerate(docs):
+        for i, d in enumerate(docs[:5]):
             jid = d.metadata.get("JID", "未知字號")
-            id_list.append(f"- ID {i+1}: [{jid}]")
+            # 這裡把 JID 存進清單
+            jid_list.append(f"- {jid}")
             
-            # 2. 產生 context_text
-            content = d.page_content[:800]
-            context_list.append(f"【參考判決 {i+1} / 字號：{jid}】\n{content}")
+            # 內容前面依然標註字號，加強關聯
+            context_list.append(f"### [判決字號：{jid}] ###\n{d.page_content}")
             
-        id_reference = "\n".join(id_list)
+        # 將 JID 清單轉為字串
+        id_reference = "\n".join(jid_list)
         context = "\n\n---\n\n".join(context_list)
 
-        # 3. 執行生成，傳入所有在 Prompt 中定義的變數
         try:
-            response = self.chain.invoke({
-                "id_reference": id_reference, # 這裡成功傳入
+            # 確保這裡的 keys 與 ChatPromptTemplate 裡的一模一樣
+            return self.chain.invoke({
+                "id_reference": id_reference, 
                 "context": context,
                 "query": query
             })
-            return response
         except Exception as e:
             return f"生成答案時發生錯誤: {str(e)}"

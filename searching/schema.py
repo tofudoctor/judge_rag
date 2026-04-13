@@ -4,7 +4,7 @@ from langchain_core.documents import Document
 
 class RAGState(TypedDict):
     query: str
-    queries: List[str]
+    keywords: str
     retrieved_docs: List[Document]
     reranked_docs: List[Document]
     is_relevant: str

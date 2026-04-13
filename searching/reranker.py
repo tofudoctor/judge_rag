@@ -1,5 +1,7 @@
 # searching/reranker.py
+import torch
 from flashrank import Ranker, RerankRequest
+from sentence_transformers import CrossEncoder
 from langchain_core.documents import Document
 from typing import List
 
@@ -51,9 +53,37 @@ class FlashReranker:
             )
 
         return final_docs
+    
+class BGEReranker:
+    def __init__(self, model_name='BAAI/bge-reranker-v2-m3', cache_dir="./cache"):
+        # 這裡會直接從 HuggingFace 下載完整的 BGE 模型
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.model = CrossEncoder(
+            model_name, 
+            max_length=1024, 
+            device=device, # 如果有 GPU 改成 "cuda"
+            automodel_args={"cache_dir": cache_dir}
+        )
 
+    def rerank(self, query: str, docs: List[Document], top_k: int = 10) -> List[Document]:
+        if not docs: return []
+        
+        # 準備輸入格式：[[query, text1], [query, text2], ...]
+        sentence_pairs = [[query, doc.page_content] for doc in docs]
+        
+        # 獲得分數
+        scores = self.model.predict(sentence_pairs)
+        
+        # 結合分數並排序
+        for i, doc in enumerate(docs):
+            doc.metadata["rerank_score"] = float(scores[i])
+            
+        sorted_docs = sorted(docs, key=lambda x: x.metadata["rerank_score"], reverse=True)
+        return sorted_docs[:top_k]
+    
     def simple_rerank(self, docs: List[Document], top_k: int = 20) -> List[Document]:
         """
         保留原本的簡易截斷方法
         """
-        return docs[:top_k]
+        sorted_docs = sorted(docs, key=lambda x: x.metadata["relevance_score"], reverse=True)
+        return sorted_docs[:top_k]
