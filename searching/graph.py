@@ -21,12 +21,13 @@ def quick_search_graph(case_type, model="gpt-oss:latest"):
     # ------------------------
     def retrieve_node(state: RAGState):
         start_time = time.time()
-        print(f"--- [階段 1] 正在檢索法律判決 (Case Type: {case_type}) ---")
+        current_case_type = state.get("case_type") or case_type
+        print(f"--- [階段 1] 正在檢索法律判決 (Case Type: {current_case_type}) ---")
         docs = retriever.retrieve(
             query=state["query"],
             keywords=state["query"],
             target_count=100,
-            case_type=case_type
+            case_type=current_case_type
         )
         print(f"    成功抓取 {len(docs)} 筆原始資料，耗時: {time.time() - start_time:.2f} 秒")
         return {"retrieved_docs": docs}
@@ -92,12 +93,13 @@ def full_search_graph(case_type, model="gpt-oss:latest"):
     # ------------------------
     def retrieve_node(state: RAGState):
         start_time = time.time()
-        print(f"--- [階段 2] 正在檢索法律判決 (Case Type: {case_type}) ---")
+        current_case_type = state.get("case_type") or case_type
+        print(f"--- [階段 2] 正在檢索法律判決 (Case Type: {current_case_type}) ---")
         docs = retriever.retrieve(
             query=state["query"],
-            keywords=state["keywords"],
+            keywords=state["query"],
             target_count=100,
-            case_type=case_type
+            case_type=current_case_type
         )
         print(f"    成功抓取 {len(docs)} 筆原始資料，耗時: {time.time() - start_time:.2f} 秒")
         return {"retrieved_docs": docs}

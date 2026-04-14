@@ -31,15 +31,16 @@ class BaseSearchPipeline:
 
 class QuickSearchPipeline(BaseSearchPipeline):
     """快速模式：直接檢索、重排、生成"""
-    def __init__(self, case_type, model="gpt-oss:latest"):
+    def __init__(self, case_type=None, model="gpt-oss:latest"):
         super().__init__()
         self.app = quick_search_graph(case_type, model=model)
 
-    def run(self, query: str):
+    def run(self, query: str, case_type=None):
         overall_start = time.time()
 
         result = self.app.invoke({
-            "query": query
+            "query": query,
+            "case_type": case_type
         })
 
         output = self._format_output(result)
@@ -57,12 +58,13 @@ class FullSearchPipeline(BaseSearchPipeline):
         super().__init__()
         self.app = full_search_graph(case_type, model=model)
 
-    def run(self, query: str):
+    def run(self, query: str, case_type=None):
         # Full 模式需要初始化 retry_count
         overall_start = time.time()
 
         result = self.app.invoke({
             "query": query,
+            "case_type": case_type,
             "retry_count": 0
         })
         
