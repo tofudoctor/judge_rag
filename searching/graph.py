@@ -14,18 +14,41 @@ def quick_search_graph(case_type, model="gpt-oss:latest"):
 
     retriever = Retriever(distance="cosine")
     reranker = BGEReranker()
-    generator = LegalGenerator()
+    generator = LegalGenerator(model=model)
 
+    # ------------------------
+    # 1. Retrieve
+    # ------------------------
     def retrieve_node(state: RAGState):
-        docs = retriever.retrieve(state["query"], case_type=case_type)
+        start_time = time.time()
+        print(f"--- [階段 1] 正在檢索法律判決 (Case Type: {case_type}) ---")
+        docs = retriever.retrieve(
+            query=state["query"],
+            keywords=state["query"],
+            target_count=100,
+            case_type=case_type
+        )
+        print(f"    成功抓取 {len(docs)} 筆原始資料，耗時: {time.time() - start_time:.2f} 秒")
         return {"retrieved_docs": docs}
 
+    # ------------------------
+    # 2. Rerank
+    # ------------------------
     def rerank_node(state: RAGState):
-        docs = reranker.rerank(state["query"], state["retrieved_docs"])
+        start_time = time.time()
+        print("--- [階段 2] 執行 BGE Rerank 二次重排 ---")
+        docs = reranker.rerank(state["query"], state["retrieved_docs"], top_k=20)
+        print(f"    耗時: {time.time() - start_time:.2f} 秒")
         return {"reranked_docs": docs}
 
+    # ------------------------
+    # 3. Generate
+    # ------------------------
     def generate_node(state: RAGState):
+        start_time = time.time()
+        print("--- [階段 3] 法律 AI 正在生成回答 ---")
         answer = generator.generate(state["query"], state["reranked_docs"])
+        print(f"    生成完畢，耗時: {time.time() - start_time:.2f} 秒")
         return {"answer": answer}
 
     graph = StateGraph(RAGState)
@@ -58,6 +81,7 @@ def full_search_graph(case_type, model="gpt-oss:latest"):
     # ------------------------
     def rewrite_node(state: RAGState):
         start_time = time.time()
+        print(f"使用{model}作為主要模型")
         print("--- [階段 1] 正在重寫問題並提取關鍵字 ---")
         keywords  = rewriter.rewrite(state["query"])
         print(f"    耗時: {time.time() - start_time:.2f} 秒")
@@ -78,7 +102,7 @@ def full_search_graph(case_type, model="gpt-oss:latest"):
         print(f"    成功抓取 {len(docs)} 筆原始資料，耗時: {time.time() - start_time:.2f} 秒")
         return {"retrieved_docs": docs}
 
-     # ------------------------
+    # ------------------------
     # 3. Rerank
     # ------------------------
     def rerank_node(state: RAGState):

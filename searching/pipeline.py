@@ -4,9 +4,7 @@ import time
 
 class BaseSearchPipeline:
     """基礎 Pipeline 類別，封裝共同邏輯"""
-    def __init__(self, case_type, model="gpt-oss:latest"):
-        self.case_type = case_type
-        self.model = model
+    def __init__(self):
         self.app = None
 
     def _format_output(self, result):
@@ -34,21 +32,30 @@ class BaseSearchPipeline:
 class QuickSearchPipeline(BaseSearchPipeline):
     """快速模式：直接檢索、重排、生成"""
     def __init__(self, case_type, model="gpt-oss:latest"):
-        super().__init__(case_type, model)
-        self.app = quick_search_graph(self.case_type, model=self.model)
+        super().__init__()
+        self.app = quick_search_graph(case_type, model=model)
 
     def run(self, query: str):
-        
+        overall_start = time.time()
+
         result = self.app.invoke({
             "query": query
         })
-        return self._format_output(result)
+
+        output = self._format_output(result)
+        
+        total_time = time.time() - overall_start
+        print(f"\n✅ [任務完成] 總檢索生成耗時: {total_time:.2f} 秒")
+        
+        output["total_time"] = total_time
+
+        return output
 
 class FullSearchPipeline(BaseSearchPipeline):
     """完整模式：改寫、檢索、重排、文件評分、幻覺檢查、失敗重試"""
-    def __init__(self, case_type, model="gpt-oss:latest"):
-        super().__init__(case_type, model)
-        self.app = full_search_graph(self.case_type, model=self.model)
+    def __init__(self, case_type, model="gpt-oss:120b"):
+        super().__init__()
+        self.app = full_search_graph(case_type, model=model)
 
     def run(self, query: str):
         # Full 模式需要初始化 retry_count
