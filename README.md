@@ -58,13 +58,13 @@ curl -fsSL https://ollama.com/install.sh | sh
 安裝完成後，拉取模型：
 
 ```bash
-ollama pull bge-m3
+ollama pull snowflake-arctic-embed2
 ```
 
 測試是否成功：
 
 ```bash
-ollama run bge-m3
+ollama run snowflake-arctic-embed2
 ```
 
 ---
@@ -94,7 +94,7 @@ python3 -m judge_rag.main
 
 # 📌 備註
 
-* 預設使用 embedding model：bge-m3（透過 Ollama）
+* 預設使用 embedding model：snowflake-arctic-embed2（透過 Ollama）
 * 預設 Qdrant：localhost:6333
 * 支援自訂年份數(n_years)
 

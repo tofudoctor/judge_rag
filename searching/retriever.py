@@ -8,7 +8,7 @@ class Retriever:
     def __init__(
         self, 
         distance="cosine", 
-        dense_embedding_model="bge-m3", 
+        dense_embedding_model="snowflake-arctic-embed2", 
         sparse_embedding_model="Qdrant/bm25", 
         url="http://localhost:6333"):
 

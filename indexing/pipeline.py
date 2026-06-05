@@ -9,7 +9,7 @@ from ..utils.batch import batch_iter
 
 class BuildPipeline:
     def __init__(self):
-        self.embedder = OllamaEmbeddings(model="bge-m3")
+        self.embedder = OllamaEmbeddings(model="snowflake-arctic-embed2")
         self.writer = QdrantWriter(host="localhost", embedding_model=self.embedder)
         self.vector_dim = len(self.embedder.embed_query("test"))
 

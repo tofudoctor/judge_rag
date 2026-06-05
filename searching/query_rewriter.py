@@ -6,7 +6,7 @@ class QueryRewriter:
 
     def __init__(self, model="gpt-oss:latest"):
 
-        self.llm = ChatOllama(model=model)
+        self.llm = ChatOllama(model=model, temperature=0, num_predict=128)
 
     def rewrite(self, query: str) -> str:
 

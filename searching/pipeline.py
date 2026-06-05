@@ -40,7 +40,9 @@ class QuickSearchPipeline(BaseSearchPipeline):
 
         result = self.app.invoke({
             "query": query,
-            "case_type": case_type
+            "case_type": case_type,
+            "generation_history": [],
+            "timing": {}
         })
 
         output = self._format_output(result)
@@ -49,12 +51,13 @@ class QuickSearchPipeline(BaseSearchPipeline):
         print(f"\n✅ [任務完成] 總檢索生成耗時: {total_time:.2f} 秒")
         
         output["total_time"] = total_time
+        output["timing"] = result.get("timing", {})
 
         return output
 
 class FullSearchPipeline(BaseSearchPipeline):
     """完整模式：改寫、檢索、重排、文件評分、幻覺檢查、失敗重試"""
-    def __init__(self, case_type, model="gpt-oss:120b"):
+    def __init__(self, case_type=None, model="gpt-oss:120b"):
         super().__init__()
         self.app = full_search_graph(case_type, model=model)
 
@@ -65,17 +68,22 @@ class FullSearchPipeline(BaseSearchPipeline):
         result = self.app.invoke({
             "query": query,
             "case_type": case_type,
-            "retry_count": 0
+            "retry_count": 0,
+            "generation_history": [],
+            "timing": {}
         })
         
         output = self._format_output(result)
         # 額外提供評分狀態供除錯或 UI 顯示
         output["is_relevant"] = result.get("is_relevant", "no")
+        output["doc_grade_reason"] = result.get("doc_grade_reason", "")
         output["hallucination_grade"] = result.get("hallucination_grade", "unknown")
+        output["hallucination_reason"] = result.get("hallucination_reason", "")
+        output["generation_history"] = result.get("generation_history", [])
         
         total_time = time.time() - overall_start
         print(f"\n✅ [任務完成] 總檢索生成耗時: {total_time:.2f} 秒")
         
         output["total_time"] = total_time
-
+        output["timing"] = result.get("timing", {})
         return output

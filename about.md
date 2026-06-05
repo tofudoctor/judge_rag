@@ -28,7 +28,7 @@
 * **重疊機制**：固定 20% 的 Overlap 以確保語意連貫性。
 
 ### 3. 向量化與儲存 (`writer.py`)
-* **Embedding 模型**：使用 `bge-m3` 模型進行文本向量化。
+* **Embedding 模型**：使用 `snowflake-arctic-embed2` 模型進行文本向量化。
 * **向量資料庫**：採用 **Qdrant**，並針對不同 Chunk Size 建立對應的 Collection。
 * **寫入機制**：支援 Batch 批次寫入（Size=32）與 SHA1 唯一碼去重，確保資料一致性。
 
