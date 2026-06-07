@@ -19,26 +19,42 @@ class DocGrader:
         self.llm = ChatOllama(
             model=model, 
             reasoning=False, 
-            temperature=0, 
-            # num_ctx=32768,
+            temperature=0,
+            seed=0,
+            # num_ctx=128000,
             num_predict=16384,)
         
-        system = """你是一個法律文件相關性審核員。
-        你的任務是判斷【檢索到的法律判決】是否足以作為【使用者問題】的法律回答依據。
+        system = """你是一個法律 RAG 文件可回答性審核員。
 
-        請用較嚴格的標準判斷：
-        1. 評為 'yes'：至少有一篇判決直接討論使用者問題中的核心法律爭點、法條、構成要件、法律效果或高度相似事實。
-        2. 評為 'no'：文件只是同一大類法律領域、只出現零散關鍵字、或無法支撐問題的法律結論。
-        3. 若使用者問題本身不是法律問題，且判決無法合理回答該問題，必須評為 'no'。
-        4. 不要因為 rerank 分數高就評為 'yes'；分數只代表語意排序，最終仍要看法律爭點是否相同。
+        你的任務是判斷【目前提供的檢索判決】是否足以支撐 AI 回答【使用者問題】。
 
-        reason 欄位請使用繁體中文，簡短說明判斷理由，並指出是否有命中的核心爭點。
-        reason 必須直接使用完整 JID 作為依據，例如「TPSV,108,台上大,1636,20210917,1 直接討論...」。
-        不得使用「文件1」、「文件2」、「第一篇」、「第幾篇」等文件編號代稱。
-        
+        請注意：你的判斷目標不是文件與問題是否有關鍵字相似，而是這批文件是否包含足以回答問題的法律依據、法院見解、構成要件、法律效果或高度相似事實。
+
+        判斷標準請採取「可回答性」而非「完全命中」標準：
+        1. 評為 'yes'：
+        - 至少有一篇判決直接或間接討論使用者問題的核心法律爭點；或
+        - 判決雖未完整回答問題，但包含可支撐保守、有限度回答的法院見解、證據評價、法律標準或事實認定方法；或
+        - 多篇判決合併後，可以合理歸納出回答方向。
+        2. 評為 'no'：
+        - 判決完全沒有觸及使用者問題所需的核心法律爭點；
+        - 判決只出現零散關鍵字，且無任何法院判斷可供引用；
+        - 判決只有程序事項、當事人主張或背景事實，缺乏法院見解；
+        - 即使採取保守、有限度回答，也找不到可引用的判決依據。
+        3. 若文件有疑義但看得出與問題核心爭點有實質關聯，傾向評為 'yes'，並在 reason 說明只能支持有限度回答。
+        4. 不需要所有判決都相關；只要目前提供的判決中至少有一篇可作為回答依據，即可判 'yes'。
+        5. 若使用者問題是抽象法律標準型問題，不要求判決文字完全出現同一問句；只要判決實質討論同一法律標準、相鄰標準或同義爭點，即可判 'yes'。
+        6. 對於「認定兩造已盡舉證責任的標準」這類問題，若判決討論舉證責任、證明責任、舉證程度、證明標準、舉證已足、舉證不足、自由心證、經驗法則、論理法則、法院如何認定事實或證據取捨，即屬核心爭點命中。
+        7. 不要因為 rerank_score 高就判 'yes'；rerank_score 只代表排序參考，不代表文件足以回答問題。
+
+        reason 欄位請使用繁體中文，簡短說明：
+        - 若判 yes，指出哪些完整 JID 足以支撐回答，以及支撐的是哪個核心爭點。
+        - 若判 no，說明目前文件缺少哪個回答問題所必需的法律依據或法院見解。
+        - reason 必須使用完整 JID，格式為 [完整JID]，例如「[TPSV,108,台上大,1636,20210917,1] 直接討論...」。
+        - 不得使用「文件1」、「文件2」、「第一篇」、「第幾篇」等文件編號代稱。
+
         請只輸出以下兩行，不要輸出其他文字：
         SCORE: yes 或 no
-        REASON: 中文簡短理由，必須包含相關完整 JID
+        REASON: 中文簡短理由
         """
         
         self.prompt = ChatPromptTemplate.from_messages([
@@ -49,19 +65,19 @@ class DocGrader:
     def grade(self, query: str, docs: list) -> str:
         if not docs:
             print("    [DocGrader] 無檢索文件，直接判定 no")
-            return {"binary_score": "no", "reason": "無檢索文件"}
+            return {"binary_score": "no", "reason": "沒有檢索到可供判斷的判決文件，因此無法根據目前資料回答該問題。"}
 
         top_score = docs[0].metadata.get("rerank_score", 0)
         print(f"    [DocGrader] Top rerank score: {top_score:.4f}，啟動 LLM 法律爭點審核")
 
-        doc_text = self.build_doc_text(docs, limit=5, chars_per_doc=1800)
+        doc_text = self.build_doc_text(docs, limit=8, chars_per_doc=1500)
         chain = self.prompt | self.llm
         raw_res = chain.invoke({"query": query, "documents": doc_text})
         parsed = self.parse_response(raw_res)
 
         if parsed.reason.startswith("模型回傳空內容"):
             print("    [DocGrader] 模型回傳空內容，改用較短文件重試一次")
-            doc_text = self.build_doc_text(docs, limit=3, chars_per_doc=900)
+            doc_text = self.build_doc_text(docs, limit=5, chars_per_doc=1000)
             raw_res = chain.invoke({"query": query, "documents": doc_text})
             parsed = self.parse_response(raw_res)
 

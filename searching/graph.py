@@ -309,9 +309,10 @@ def full_search_graph(case_type, model="gpt-oss:latest"):
     # 11. 無法回答 fallback
     # ------------------------
     def fail_node(state: RAGState):
+        reason = state.get("doc_grade_reason") or "根據目前檢索到的判決資料，無法找到足夠依據回答該問題。"
         return {
-            "answer": "根據目前檢索到的判決資料，無法找到足夠依據回答該問題。",
-            "timing": state.get("timing", {})   # ⭐補這行
+            "answer": reason,
+            "timing": state.get("timing", {})
         }
 
     # ------------------------

@@ -76,12 +76,26 @@ class MixedbreadReranker:
 
         print(f"[Reranker] Loading {model_name} on {requested_device}.")
 
-        self.model = CrossEncoder(
-            model_name,
-            max_length=1024,
-            device=requested_device,
-            model_kwargs=model_kwargs,
-        )
+        try:
+            self.model = CrossEncoder(
+                model_name,
+                max_length=1024,
+                device=requested_device,
+                model_kwargs=model_kwargs,
+            )
+        except (RuntimeError, torch.AcceleratorError) as exc:
+            message = str(exc).lower()
+            if requested_device != "cuda" or "out of memory" not in message:
+                raise
+
+            print("[Reranker] CUDA out of memory; fallback to CPU.")
+            torch.cuda.empty_cache()
+            self.model = CrossEncoder(
+                model_name,
+                max_length=1024,
+                device="cpu",
+                model_kwargs={"cache_dir": cache_dir},
+            )
 
     def rerank(self, query: str, docs: List[Document], top_k: int = 10) -> List[Document]:
         if not docs: return []
