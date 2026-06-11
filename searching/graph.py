@@ -31,7 +31,7 @@ def quick_search_graph(case_type, model="gpt-oss:latest"):
         docs = retriever.retrieve(
             query=state["query"],
             keywords=state["query"],
-            target_count=50,
+            target_count=100,
             case_type=current_case_type
         )
         duration = time.time() - start_time
@@ -143,7 +143,7 @@ def full_search_graph(case_type, model="gpt-oss:latest"):
         docs = retriever.retrieve(
             query=state["query"],
             keywords=state["keywords"],
-            target_count=100,
+            target_count=200,
             case_type=current_case_type
         )
 

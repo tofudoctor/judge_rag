@@ -7,8 +7,8 @@ from flashrank import Ranker, RerankRequest
 from langchain_core.documents import Document
 from typing import List
 
-RECENCY_BOOST_MAX = 0.5
-AUTHORITY_BOOST = 2.0
+RECENCY_BOOST_MAX = 1.0
+AUTHORITY_BOOST = 5.0
 
 class FlashReranker:
     def __init__(self, model_name: str = "ms-marco-MultiBERT-L-12", cache_dir: str = "./cache"):
@@ -127,7 +127,7 @@ class MixedbreadReranker:
         for i, doc in enumerate(docs):
             raw_score = float(scores[i])
             jid = doc.metadata.get("JID", "")
-            authority_boost = AUTHORITY_BOOST if "大" in jid and raw_score > 10 else 0.0
+            authority_boost = AUTHORITY_BOOST if "大" in jid and raw_score > 5 else 0.0
             recency_boost = recency_boost_by_id.get(id(doc), 0.0)
 
             doc.metadata["rerank_raw_score"] = raw_score

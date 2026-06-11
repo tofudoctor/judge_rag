@@ -44,9 +44,9 @@ class Retriever:
                     # 權重分配邏輯：
                     # 5.0: Query Dense (核心語意)
                     # 2.0: Query Sparse (問題關鍵字)
-                    # 0.2: Keywords Dense (關鍵字語意擴展)
-                    # 0.5: Keywords Sparse (精確法條)
-                    weights=[5.0, 2.0, 0.2, 0.5] 
+                    # 0.5: Keywords Dense (關鍵字語意擴展)
+                    # 1.0: Keywords Sparse (精確法條)
+                    weights=[5.0, 2.0, 0.5, 1.0] 
                 )
             ),
             prefetch=[

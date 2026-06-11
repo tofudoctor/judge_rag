@@ -48,6 +48,11 @@ BENCHMARK_QUERIES = [
         "case_type": None,
         "query": "怎麼打籃球？",
     },
+    {
+        "id": 8,
+        "case_type": None,
+        "query": "法人名譽受損能否請求慰撫金？",
+    },
 ]
 
 
@@ -239,28 +244,28 @@ def main(args=None, output_path=OUTPUT_PATH):
         args = parse_args()
     benchmarks = [
         ("QuickSearch", QuickSearchPipeline, "gpt-oss:latest", print_quick_table),
-        ("QuickSearch", QuickSearchPipeline, "gpt-oss:120b", print_quick_table),
-        ("QuickSearch", QuickSearchPipeline, "gemma4:latest", print_quick_table),
-        ("QuickSearch", QuickSearchPipeline, "gemma4:26b", print_quick_table),
-        ("QuickSearch", QuickSearchPipeline, "gemma4:31b", print_quick_table),
-        ("QuickSearch", QuickSearchPipeline, "mistral-small3.2:latest", print_quick_table),
-        ("QuickSearch", QuickSearchPipeline, "nemotron-3-nano:4b", print_quick_table),
-        ("QuickSearch", QuickSearchPipeline, "nemotron3:33b", print_quick_table),
-        ("QuickSearch", QuickSearchPipeline, "nemotron-3-super:latest", print_quick_table),
-        ("QuickSearch", QuickSearchPipeline, "granite4.1:8b", print_quick_table),
-        ("QuickSearch", QuickSearchPipeline, "granite4.1:30b", print_quick_table),
+        # ("QuickSearch", QuickSearchPipeline, "gpt-oss:120b", print_quick_table),
+        # ("QuickSearch", QuickSearchPipeline, "gemma4:latest", print_quick_table),
+        # ("QuickSearch", QuickSearchPipeline, "gemma4:26b", print_quick_table),
+        # ("QuickSearch", QuickSearchPipeline, "gemma4:31b", print_quick_table),
+        # ("QuickSearch", QuickSearchPipeline, "mistral-small3.2:latest", print_quick_table),
+        # ("QuickSearch", QuickSearchPipeline, "nemotron-3-nano:4b", print_quick_table),
+        # ("QuickSearch", QuickSearchPipeline, "nemotron3:33b", print_quick_table),
+        # ("QuickSearch", QuickSearchPipeline, "nemotron-3-super:latest", print_quick_table),
+        # ("QuickSearch", QuickSearchPipeline, "granite4.1:8b", print_quick_table),
+        # ("QuickSearch", QuickSearchPipeline, "granite4.1:30b", print_quick_table),
 
         ("FullSearch", FullSearchPipeline, "gpt-oss:latest", print_full_table),
-        ("FullSearch", FullSearchPipeline, "gpt-oss:120b", print_full_table),
-        ("FullSearch", FullSearchPipeline, "gemma4:latest", print_full_table),
-        ("FullSearch", FullSearchPipeline, "gemma4:26b", print_full_table),
-        ("FullSearch", FullSearchPipeline, "gemma4:31b", print_full_table),
-        ("FullSearch", FullSearchPipeline, "mistral-small3.2:latest", print_full_table),
-        ("FullSearch", FullSearchPipeline, "nemotron-3-nano:4b", print_full_table),
-        ("FullSearch", FullSearchPipeline, "nemotron3:33b", print_full_table),
-        ("FullSearch", FullSearchPipeline, "nemotron-3-super:latest", print_full_table),
-        ("FullSearch", FullSearchPipeline, "granite4.1:8b", print_full_table),
-        ("FullSearch", FullSearchPipeline, "granite4.1:30b", print_full_table),
+        # ("FullSearch", FullSearchPipeline, "gpt-oss:120b", print_full_table),
+        # ("FullSearch", FullSearchPipeline, "gemma4:latest", print_full_table),
+        # ("FullSearch", FullSearchPipeline, "gemma4:26b", print_full_table),
+        # ("FullSearch", FullSearchPipeline, "gemma4:31b", print_full_table),
+        # ("FullSearch", FullSearchPipeline, "mistral-small3.2:latest", print_full_table),
+        # ("FullSearch", FullSearchPipeline, "nemotron-3-nano:4b", print_full_table),
+        # ("FullSearch", FullSearchPipeline, "nemotron3:33b", print_full_table),
+        # ("FullSearch", FullSearchPipeline, "nemotron-3-super:latest", print_full_table),
+        # ("FullSearch", FullSearchPipeline, "granite4.1:8b", print_full_table),
+        # ("FullSearch", FullSearchPipeline, "granite4.1:30b", print_full_table),
     ]
 
     benchmarks = select_benchmarks(benchmarks, args)
